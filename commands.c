@@ -10,12 +10,20 @@
 #include <string.h>
 #include "commands.h"
 
+const char *command_strings[] = {
+	"quit",
+	"msg",
+	"send",
+	"pull",
+	"write-txt"
+};
+
 /* return the int corresponding to the command to execute */
 int parse_command(const char *cmd)
 {
 	for (int i = 0; i < CWB_COMMAND_LEN; i++) {
 		/* const char *commands[] is defined in commands.h */
-		if (strcmp(cmd, commands[i]) == 0) {
+		if (strcmp(cmd, command_strings[i]) == 0) {
 			return i; //i is guaranteed to match the enum... cast the result?
 		}
 	}

