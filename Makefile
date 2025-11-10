@@ -2,7 +2,7 @@ CFLAGS=-Wall
 CC=gcc
 SOURCES=main.c lshell.c commands.c socket.c lua_interop.c
 OBJS=main.o lshell.o commands.o socket.o lua_interop.o
-LFLAGS=-L./lua-5.4.8/install/lib/ -llua
+LFLAGS=-llua5.4
 
 
 all: lshell
