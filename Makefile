@@ -12,7 +12,7 @@ debug: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LFLAGS)
 
 clean:
-	rm -f *.o *.exe lshell
+	rm -f *.o *.exe lshell a.out
 
 lshell: $(OBJS)
 	$(CC) $(CFLAGS) $(LFLAGS) $(OBJS) $(LFLAGS)

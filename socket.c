@@ -11,6 +11,8 @@
 #include "definitions.h"
 #include "externs.h"
 
+//TODO - get windows sockets working :(
+
 /* As this application is a reverse shell style program, the server is the 
 * command and control machine that gets connected back to.
 */
