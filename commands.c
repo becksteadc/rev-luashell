@@ -6,9 +6,17 @@
 *
 * Module model - restricted
 */
+
+#define STB_DS_IMPLEMENTATION
+#include "stb_ds.h"
+
 #include <stdio.h>
 #include <string.h>
 #include "commands.h"
+
+
+
+
 
 const char *command_strings[] = {
 	"quit",
@@ -31,10 +39,32 @@ int parse_command(const char *cmd)
 	return -1; //clean up and exit program
 }
 
+
+/* creates hashmap where the commands as string are the key and the enum are the value*/
+struct Hashmap *create_hashmap()
+{
+    struct Hashmap *hashmap = NULL;
+    for(int i = 0; i < CWB_COMMAND_LEN; i++){
+        //This line sets the key and value of the hashmap where i is assumed to be the corresponding enum
+        shput(hashmap, (char *)command_strings[i], i);
+    }
+    shdefault(hashmap, -1); //if given a key that is not in the hashmap it will return -1 meaning error
+    return hashmap;
+}
+
+
+/* return the enum of the command given a str using a hashmap*/
+int parse_command_hashmap(const char *cmd){
+    //This shouldn't have to be done evertime I'm just not sure how you want to globilize it
+    struct Hashmap *hashmap = create_hashmap();
+    return shget(hashmap, cmd);
+}
+
+
 /*
 * See definition of the commands enum in commands.h
 * This should be run on the "client" / controlled side.
-*/ 
+*/
 int exec_command(enum Commands cmd) //TODO exec commands...
 {
 	int exec_status = -1;
