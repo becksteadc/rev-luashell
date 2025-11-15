@@ -87,9 +87,9 @@ int server_loop(int host_conn, char *buf, size_t buflen)
 		printf("%s\n", "Failed to send command over socket.");
 	else {
 		memset(buf, 0, buflen);
-		int response = recv(host_conn, buf, sizeof(buf) - 1, 0);
+		int response = recv(host_conn, buf, buflen - 1, 0);
 		if (response > 0) {
-			buf[SERVER_BUFLEN - 1] = '\0';
+			buf[buflen - 1] = '\0';
 			printf("Return response: %s\n", buf);
 		}
 	}

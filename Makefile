@@ -9,13 +9,13 @@ all: lshell
 
 debug: $(OBJS)
 	$(CC) $(CFLAGS) -c tests.c -o main.o
-	$(CC) $(CFLAGS) $(OBJS) $(LFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) $(LFLAGS) -o lshell-debug
 
 clean:
 	rm -f *.o *.exe lshell a.out
 
 lshell: $(OBJS)
-	$(CC) $(CFLAGS) $(LFLAGS) $(OBJS) $(LFLAGS)
+	$(CC) $(CFLAGS) $(LFLAGS) $(OBJS) $(LFLAGS) -o lshell
 
 lshell.o: lshell.c
 	$(CC) $(CFLAGS) -c $< -o $@

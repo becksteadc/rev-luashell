@@ -26,11 +26,11 @@ const char *command_strings[] = {
 	"write-txt"
 };
 
-/* return the int corresponding to the command to execute */
+/* return the int corresponding to the command to execute 
 int parse_command(const char *cmd)
 {
 	for (int i = 0; i < CWB_COMMAND_LEN; i++) {
-		/* const char *commands[] is defined in commands.h */
+		// const char *commands[] is defined in commands.h
 		if (strcmp(cmd, command_strings[i]) == 0) {
 			return i; //i is guaranteed to match the enum... cast the result?
 		}
@@ -38,7 +38,7 @@ int parse_command(const char *cmd)
 	fprintf(stderr, "%s\n", "FATAL: failed to parse command");
 	return -1; //clean up and exit program
 }
-
+*/
 
 /* creates hashmap where the commands as string are the key and the enum are the value*/
 struct Hashmap *create_hashmap()
@@ -54,9 +54,11 @@ struct Hashmap *create_hashmap()
 
 
 /* return the enum of the command given a str using a hashmap*/
-int parse_command_hashmap(const char *cmd){
-    //This shouldn't have to be done evertime I'm just not sure how you want to globilize it
-    struct Hashmap *hashmap = create_hashmap();
+int parse_command(const char *cmd){
+	static struct Hashmap *hashmap = NULL;
+	if (hashmap == NULL)
+		hashmap = create_hashmap();
+		
     return shget(hashmap, cmd);
 }
 
