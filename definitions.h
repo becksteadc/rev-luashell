@@ -3,7 +3,8 @@
 
 //Definitions that will be read and set by the lua config file
 struct ProgramConfig {
-	int server_port;		
+    int server_port;		
+    int max_connections;
 };
 
 

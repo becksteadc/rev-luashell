@@ -7,8 +7,8 @@
 #include "lua-5.4.8/src/lualib.h"
 
 #include "definitions.h"
+#include "lua_interop.h"
 
-#define CONFIG_FILENAME "lshell_config.lua"
 
 //global definition
 struct ProgramConfig GlobalConfig;
@@ -35,15 +35,18 @@ int getglobint(lua_State *L, const char *var)
 */
 int lshell_load_state(void)
 {
-	lua_State *l_state = luaL_newstate();
-	luaL_openlibs(l_state);
-	if (luaL_loadfile(l_state, CONFIG_FILENAME) || lua_pcall(l_state, 0, 0, 0)) {
-		printf("%s\n", "Error: failed to open lua config file: CONFIG_FILENAME");
-		return -1;
-	}
+    lua_State *l_state = luaL_newstate();
+    luaL_openlibs(l_state);
+    if (luaL_loadfile(l_state, CONFIG_FILENAME) || lua_pcall(l_state, 0, 0, 0)) {
+        printf("%s\n", "Error: failed to open lua config file: CONFIG_FILENAME");
+        return -1;
+    }
 
-	if ((GlobalConfig.server_port = getglobint(l_state, "server_port")) == -1)
-		return -1; //error - was unable to read the value needed
+    //TODO - use STATE_VARIABLES rather than hardcoded strings
+    if ((GlobalConfig.server_port = getglobint(l_state, "server_port")) == -1)
+       return -1; //error - was unable to read the value needed
+    if ((GlobalConfig.max_connections = getglobint(l_state, "server_port")) == -1)
+        return -1; //error - was unable to read the value needed
 
-	return 0;
+    return 0;
 }
