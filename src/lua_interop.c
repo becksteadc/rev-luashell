@@ -2,9 +2,10 @@
 // namely, it should read in the definitions in the lua file
 //and use them as configuration settings passed to the rest of the program
 #include <stdio.h>
-#include "lua-5.4.8/src/lua.h"
-#include "lua-5.4.8/src/lauxlib.h"
-#include "lua-5.4.8/src/lualib.h"
+//TODO - very nonportable includes here...
+#include "../lua-5.4.8/src/lua.h"
+#include "../lua-5.4.8/src/lauxlib.h"
+#include "../lua-5.4.8/src/lualib.h"
 
 #include "definitions.h"
 #include "lua_interop.h"

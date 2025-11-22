@@ -1,8 +1,8 @@
 CFLAGS=-Wall
 CC=gcc
 SOURCES=main.c lshell.c commands.c socket.c lua_interop.c win32_socket.c
-OBJS=main.o lshell.o commands.o socket.o lua_interop.o win32_socket.o
-
+OBJS=main.o lshell.o commands.o linux_socket.o win32_socket.o lua_interop.o win32_socket.o
+SRC_DIR=src/
 #Change this to match your OS - only these two options are available.
 #OS=OS_LINUX 
 OS=OS_WINDOWS
@@ -23,20 +23,20 @@ lshell: $(OBJS)
 	$(CC) $(CFLAGS) $(LFLAGS) $(OBJS) $(LFLAGS) -o lshell --define-macro $(OS)
 		
 
-lshell.o: lshell.c
+lshell.o: $(SRC_DIR)lshell.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-main.o: main.c
+main.o: $(SRC_DIR)main.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-commands.o: commands.c
+commands.o: $(SRC_DIR)commands.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-linux_socket.o: linux_socket.c
+linux_socket.o: $(SRC_DIR)linux_socket.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-win32_socket.o: win32_socket.c
+win32_socket.o: $(SRC_DIR)win32_socket.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-lua_interop.o: lua_interop.c
+lua_interop.o: $(SRC_DIR)lua_interop.c
 	$(CC) $(CFLAGS) -c $< -o $@
