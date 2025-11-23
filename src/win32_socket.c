@@ -12,54 +12,54 @@ int start_server(void)
 		return -1;
 	}
 	    
-	    struct addrinfo *adr_info = NULL;
-	    struct addrinfo socket_flags = {
-			.ai_family = AF_INET,
-			.ai_socktype = SOCK_STREAM,
-			.ai_protocol = IPPROTO_TCP,
-			.ai_flags = AI_PASSIVE
-	    };
+	struct addrinfo *adr_info = NULL;
+	struct addrinfo socket_flags = {
+		.ai_family = AF_INET,
+		.ai_socktype = SOCK_STREAM,
+		.ai_protocol = IPPROTO_TCP,
+		.ai_flags = AI_PASSIVE
+	};
 
-		char port[16]; //windows expects the port # as a string for some reason
-		snprintf(port, 16, "%d", GlobalConfig.server_port);
+	char port[16]; //windows expects the port # as a string for some reason
+	snprintf(port, 16, "%d", GlobalConfig.server_port);
 
-	    result = getaddrinfo(NULL, port, &socket_flags, &adr_info);
-	    if (result != 0) {
-			fprintf(stderr, "%s\n", "Failed to get socket address information");
-			WSACleanup();
-			return -1;
-	    }
+	result = getaddrinfo(NULL, port, &socket_flags, &adr_info);
+	if (result != 0) {
+		fprintf(stderr, "%s\n", "Failed to get socket address information");
+		WSACleanup();
+		return -1;
+	}
 
-	    SOCKET listen_socket = socket(
-			adr_info->ai_family,
-			adr_info->ai_socktype,
-			adr_info->ai_protocol
-	    );
-	    if (listen_socket == INVALID_SOCKET) {
-			fprintf(stderr, "%s\n", "Failed to create socket.");
-			freeaddrinfo(adr_info);
-			WSACleanup();
-			return -1;
-	    }
+	SOCKET listen_socket = socket(
+		adr_info->ai_family,
+		adr_info->ai_socktype,
+		adr_info->ai_protocol
+	);
+	if (listen_socket == INVALID_SOCKET) {
+		fprintf(stderr, "%s\n", "Failed to create socket.");
+		freeaddrinfo(adr_info);
+		WSACleanup();
+		return -1;
+	}
 
-	    result = bind(listen_socket, adr_info->ai_addr, (int) adr_info-> ai_addrlen);
-	    freeaddrinfo(adr_info); //freed regardless of success or failure
-	    if (result == SOCKET_ERROR) {
-			fprintf(stderr, "%s\n", "Socket bind error.");
-			closesocket(listen_socket);
-			WSACleanup();
-			return -1;
-	    }
+	result = bind(listen_socket, adr_info->ai_addr, (int) adr_info-> ai_addrlen);
+	freeaddrinfo(adr_info); //freed regardless of success or failure
+	if (result == SOCKET_ERROR) {
+		fprintf(stderr, "%s\n", "Socket bind error.");
+		closesocket(listen_socket);
+		WSACleanup();
+		return -1;
+	}
 
-	    if (listen(listen_socket, GlobalConfig.max_connections) == SOCKET_ERROR) {
-			fprintf(stderr, "%s%d\n", "Error: ", WSAGetLastError());
-			closesocket(listen_socket);
-			WSACleanup();
-			return -2;
-	    }
+	if (listen(listen_socket, GlobalConfig.max_connections) == SOCKET_ERROR) {
+		fprintf(stderr, "%s%d\n", "Error: ", WSAGetLastError());
+		closesocket(listen_socket);
+		WSACleanup();
+		return -2;
+	}
 
 
-	    return server_handle_conn(listen_socket);
+	return server_handle_conn(listen_socket);
 }
 
 
