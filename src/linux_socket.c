@@ -1,17 +1,6 @@
 #ifdef OS_LINUX
 
-#include <stdio.h>
-#include <sys/socket.h> //unix-specific...
-#include <netdb.h> //for little to big endian
-#include <stdlib.h>
-#include <string.h> //slated for removal? only used in client-side code
-#include <arpa/inet.h> //for inet_pton()
-#include <unistd.h>
-
 #include "linux_socket.h"
-#include "commands.h"
-#include "definitions.h"
-#include "externs.h"
 
 //windows sockets - win32_socket.c
 

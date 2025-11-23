@@ -10,6 +10,15 @@
 #include "definitions.h"
 #include "lua_interop.h"
 
+//fine to have as a string array, since these are only parsed once (no hash)
+#define STATE_VARIABLES_COUNT 3
+const char *STATE_VARIABLES[3] = {
+    "server_port",
+    "backup_port",
+    "max_connections"
+};
+
+
 
 //global definition
 struct ProgramConfig GlobalConfig;
@@ -39,7 +48,7 @@ int lshell_load_state(void)
     lua_State *l_state = luaL_newstate();
     luaL_openlibs(l_state);
     if (luaL_loadfile(l_state, CONFIG_FILENAME) || lua_pcall(l_state, 0, 0, 0)) {
-        printf("%s\n", "Error: failed to open lua config file: CONFIG_FILENAME");
+        printf("%s%s\n", "Error: failed to open lua config file:" CONFIG_FILENAME);
         return -1;
     }
 

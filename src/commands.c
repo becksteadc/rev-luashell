@@ -26,20 +26,6 @@ const char *command_strings[] = {
 	"write-txt"
 };
 
-/* return the int corresponding to the command to execute 
-int parse_command(const char *cmd)
-{
-	for (int i = 0; i < CWB_COMMAND_LEN; i++) {
-		// const char *commands[] is defined in commands.h
-		if (strcmp(cmd, command_strings[i]) == 0) {
-			return i; //i is guaranteed to match the enum... cast the result?
-		}
-	}
-	fprintf(stderr, "%s\n", "FATAL: failed to parse command");
-	return -1; //clean up and exit program
-}
-*/
-
 /* creates hashmap where the commands as string are the key and the enum are the value*/
 struct Hashmap *create_hashmap()
 {
