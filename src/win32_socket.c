@@ -13,17 +13,20 @@ int start_server(void)
 	}
 	    
 	struct addrinfo *adr_info = NULL;
-	struct addrinfo socket_flags = {
-		.ai_family = AF_INET,
-		.ai_socktype = SOCK_STREAM,
-		.ai_protocol = IPPROTO_TCP,
-		.ai_flags = AI_PASSIVE
-	};
+	struct addrinfo socket_flags;
+	ZeroMemory(&socket_flags, sizeof(socket_flags));
+	socket_flags.ai_family = AF_INET;
+	socket_flags.ai_socktype = SOCK_STREAM;
+	socket_flags.ai_protocol = IPPROTO_TCP;
+	socket_flags.ai_flags = AI_PASSIVE;
 
-	char port[16]; //windows expects the port # as a string for some reason
-	snprintf(port, 16, "%d", GlobalConfig.server_port);
+	//char port[16]; //windows expects the port # as a string for some reason
+	//snprintf(port, 16, "%d", GlobalConfig.server_port);
+	//port[15] = '\0';
+	//printf("snprintf ver: %s htons ver: %d\n", port, htons(2001));	
+	#define TEMP_DEFAULT_PORT "2001"
 
-	result = getaddrinfo(NULL, port, &socket_flags, &adr_info);
+	result = getaddrinfo(NULL, TEMP_DEFAULT_PORT, &socket_flags, &adr_info);
 	if (result != 0) {
 		fprintf(stderr, "%s\n", "Failed to get socket address information");
 		WSACleanup();
@@ -42,7 +45,7 @@ int start_server(void)
 		return -1;
 	}
 
-	result = bind(listen_socket, adr_info->ai_addr, (int) adr_info-> ai_addrlen);
+	result = bind(listen_socket, adr_info->ai_addr, (int) adr_info->ai_addrlen);
 	freeaddrinfo(adr_info); //freed regardless of success or failure
 	if (result == SOCKET_ERROR) {
 		fprintf(stderr, "%s\n", "Socket bind error.");
@@ -58,8 +61,10 @@ int start_server(void)
 		return -2;
 	}
 
-
-	return server_handle_conn(listen_socket);
+	//server_handle_conn now owns listen_socket and closes it
+	int connection_result = server_handle_conn(listen_socket);
+	WSACleanup();
+	return connection_result;
 }
 
 
@@ -67,26 +72,35 @@ int server_handle_conn(SOCKET socket_fd)
 {
 	#define SERVER_BUFLEN 1024
 	char buf[SERVER_BUFLEN];
-	struct sockaddr_storage c_addr;
-	socklen_t c_addr_len = sizeof(c_addr);
+	//struct sockaddr_storage c_addr;
+	//socklen_t c_addr_len = sizeof(c_addr);
 	char quit = 0; //bool flag for the do-while loop
-	//client file descriptor = cfd
-	SOCKET cfd = accept(socket_fd, (struct sockaddr *) &c_addr, &c_addr_len);
+	//cfd -- client file descriptor
+	fprintf(stdout, "DEBUG: reached accept() call\n");
+	SOCKET cfd = accept(socket_fd, NULL, NULL);
 	closesocket(socket_fd);
 
 	if (cfd == INVALID_SOCKET) {
 		fprintf(stderr, "%s\n", "failed to accept the reverse binding");
-		closesocket(cfd);
 		WSACleanup();
 		return -1;
 	}	
 
-	if (recv(cfd, buf, sizeof(buf) - 1, 0) > 0) {
-		buf[SERVER_BUFLEN - 1] = '\n';
-		printf("Contact received: %s\n", buf);
+	fprintf(stderr, "DEBUG: reached recv()");
+	int result = recv(cfd, buf, sizeof(buf), 0);
+	if (result == SOCKET_ERROR) {
+		printf("send failed with error on recv(): %d", WSAGetLastError());
+		closesocket(cfd);
+		WSACleanup();
+		return -2;
 	}
+	buf[SERVER_BUFLEN - 1] = '\0';
+	printf("Contact received: %s\n", buf);
+	
 	do {
+		fprintf(stderr, "DEBUG: reached server_loop begin");
 		quit = server_loop(cfd, buf, sizeof(buf));
+		fprintf(stderr, "DEBUG: reached server_loop exit");
 	} while (!quit);
 
 	closesocket(cfd);
@@ -121,6 +135,63 @@ int server_loop(SOCKET host_conn, char *buf, size_t buflen)
 			printf("Return response: %s\n", buf);
 		}
 	}
+	return 0;
+}
+
+int startHost()
+{
+	#define CLIENT_BUFLEN 256
+	struct addrinfo *address_result, *ptr, address_flags;
+	address_result = NULL;
+	ptr = NULL;
+	ZeroMemory(&address_flags, sizeof(address_flags));
+	address_flags.ai_protocol = IPPROTO_TCP;
+	address_flags.ai_socktype = SOCK_STREAM;
+	address_flags.ai_family = AF_UNSPEC;
+
+
+	//DEBUG TODO - switch to lua config later
+	#define SERVER_HOSTNAME "localhost"
+	#define DEFAULT_PORT_DEBUG "2001"
+	int result = getaddrinfo(SERVER_HOSTNAME, DEFAULT_PORT_DEBUG, &address_flags, &address_result);
+	if (result != 0) {
+		fprintf(stderr, "failed to get server address info\n");
+		WSACleanup();
+		return -1;
+	}
+		
+	SOCKET client_socket = INVALID_SOCKET;
+	result = connect(client_socket, address_result->ai_addr, (int) address_result->ai_addrlen);
+	if (result == SOCKET_ERROR) {
+		closesocket(client_socket);
+		fprintf(stderr, "Failed to connect socket to server\n");
+		WSACleanup();
+		return -2;
+	}
+
+	char buf[CLIENT_BUFLEN];	
+	//Possible bug - strlen not sending null terminator (do strlen+1)
+	result = send(client_socket, "Testing send", strlen("Testing send"), 0);
+	if (result == SOCKET_ERROR) {
+		fprintf(stderr, "send failed");
+		closesocket(client_socket);
+		WSACleanup();
+		return -3;
+	}
+
+	do {
+		result = recv(client_socket, buf, CLIENT_BUFLEN, 0);
+		if (result == SOCKET_ERROR) {
+			fprintf(stderr, "socket error %d", WSAGetLastError());
+			closesocket(client_socket);
+			WSACleanup();
+		}
+		buf[CLIENT_BUFLEN - 1] = '\0';
+		printf("%s\n", buf);	
+	} while(result > 0);
+
+	closesocket(client_socket);
+	WSACleanup;
 	return 0;
 }
 

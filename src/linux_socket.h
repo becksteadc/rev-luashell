@@ -28,9 +28,7 @@ int server_handle_conn(int socket_fd);
 int server_loop(int host_conn, char *buf, size_t buflen);
 
 
-//TODO
-//move "client / host" code to separate file, rename to host, not client
-int startClient(void);
+int startHost(void);
 
 #endif //OS_LINUX
 #endif //incl. guard

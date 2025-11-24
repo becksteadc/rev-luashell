@@ -9,7 +9,7 @@
 */
 int start_server(void)
 {
-	int socket_descriptor = socket(AF_INET, SOCK_STREAM, 0);
+	int socket_descriptor = socket(AF_INET, SOCK_STREAM, 0); //replace 0 with IPPROTO_TCP?
 	if (socket_descriptor == -1)
 		fprintf(stderr, "%s\n", "Failed to create socket.");
 
@@ -46,7 +46,7 @@ int server_handle_conn(int socket_fd)
 	}	
 
 	if (recv(cfd, buf, sizeof(buf) - 1, 0) > 0) {
-		buf[SERVER_BUFLEN - 1] = '\n';
+		buf[SERVER_BUFLEN - 1] = '\0';
 		printf("Contact received: %s\n", buf);
 	}
 	do {

@@ -48,7 +48,7 @@ int lshell_load_state(void)
     lua_State *l_state = luaL_newstate();
     luaL_openlibs(l_state);
     if (luaL_loadfile(l_state, CONFIG_FILENAME) || lua_pcall(l_state, 0, 0, 0)) {
-        printf("%s%s\n", "Error: failed to open lua config file:" CONFIG_FILENAME);
+        printf("%s%s\n", "Error: failed to open lua config file:", CONFIG_FILENAME);
         return -1;
     }
 

@@ -10,6 +10,7 @@
 // max connections also added to global config
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 #include <winsock2.h> //if used with windows.h, must define WIN32_LEAN_AND_MEAN
 #include <ws2tcpip.h>
 
@@ -21,10 +22,7 @@ int start_server(void);
 int server_handle_conn(SOCKET socket_fd);
 int server_loop(SOCKET host_conn, char *buf, size_t buflen);
 
-
-//TODO
-//move "client / host" code to separate file, rename to host, not client
-int startClient(void);
+int startHost(void); //client code
 
 #endif //OS_WINDOWS
 #endif //incl. guard
