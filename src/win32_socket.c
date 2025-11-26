@@ -138,33 +138,47 @@ int server_loop(SOCKET host_conn, char *buf, size_t buflen)
 	return 0;
 }
 
-int startHost()
+int start_host()
 {
 	#define CLIENT_BUFLEN 256
-	struct addrinfo *address_result, *ptr, address_flags;
+	struct addrinfo *address_result, address_flags;
 	address_result = NULL;
-	ptr = NULL;
 	ZeroMemory(&address_flags, sizeof(address_flags));
 	address_flags.ai_protocol = IPPROTO_TCP;
 	address_flags.ai_socktype = SOCK_STREAM;
 	address_flags.ai_family = AF_UNSPEC;
 
-
+	WSADATA wsaData;
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0) {
+		fprintf(stderr, "%s\n", "Failed to initialize WinSock");
+		return -1;
+	}
 	//DEBUG TODO - switch to lua config later
 	#define SERVER_HOSTNAME "localhost"
+	//#define SERVER_HOSTNAME "127.0.0.1"
 	#define DEFAULT_PORT_DEBUG "2001"
-	int result = getaddrinfo(SERVER_HOSTNAME, DEFAULT_PORT_DEBUG, &address_flags, &address_result);
+	result = getaddrinfo(SERVER_HOSTNAME, DEFAULT_PORT_DEBUG, &address_flags, &address_result);
 	if (result != 0) {
-		fprintf(stderr, "failed to get server address info\n");
+		fprintf(stderr, "failed to get server address info, code: %d\n", result);
 		WSACleanup();
 		return -1;
 	}
 		
-	SOCKET client_socket = INVALID_SOCKET;
+	SOCKET client_socket = socket(
+		address_flags.ai_family,
+		address_flags.ai_socktype,
+		address_flags.ai_protocol);
+	if (client_socket == INVALID_SOCKET) {
+		fprintf(stderr, "call to socket() failed, code: %d", WSAGetLastError());
+		WSACleanup();
+		return -1;
+	}
+
 	result = connect(client_socket, address_result->ai_addr, (int) address_result->ai_addrlen);
 	if (result == SOCKET_ERROR) {
 		closesocket(client_socket);
-		fprintf(stderr, "Failed to connect socket to server\n");
+		fprintf(stderr, "Failed to connect socket to server, code: %d\n", WSAGetLastError());
 		WSACleanup();
 		return -2;
 	}
@@ -173,7 +187,7 @@ int startHost()
 	//Possible bug - strlen not sending null terminator (do strlen+1)
 	result = send(client_socket, "Testing send", strlen("Testing send"), 0);
 	if (result == SOCKET_ERROR) {
-		fprintf(stderr, "send failed");
+		fprintf(stderr, "send failed, error: %d", WSAGetLastError());
 		closesocket(client_socket);
 		WSACleanup();
 		return -3;
@@ -191,7 +205,7 @@ int startHost()
 	} while(result > 0);
 
 	closesocket(client_socket);
-	WSACleanup;
+	WSACleanup();
 	return 0;
 }
 

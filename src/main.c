@@ -22,9 +22,13 @@ int main(int argc, char **argv) {
 	if (strcmp(argv[1], "server") == 0) {
 		printf("Global config port: %d", GlobalConfig.server_port);
 		start_server();
+	} else if (strcmp(argv[1], "client") == 0) {
+		printf("Launching client\n");
+		start_host();
+	} else {
+		printf("%ld\n", __STDC_VERSION__);
+		printf("Project build successful.");
+		getchar();
 	}
-	printf("%ld\n", __STDC_VERSION__);
-	printf("Project build successful.");
-	getchar();
 	return 0;
 }

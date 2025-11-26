@@ -22,7 +22,7 @@ int start_server(void);
 int server_handle_conn(SOCKET socket_fd);
 int server_loop(SOCKET host_conn, char *buf, size_t buflen);
 
-int startHost(void); //client code
+int start_host(void); //client code
 
 #endif //OS_WINDOWS
 #endif //incl. guard
