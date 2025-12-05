@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
 	lshell_load_state();
 	if (strcmp(argv[1], "server") == 0) {
-		printf("Global config port: %d", GlobalConfig.server_port);
+		printf("Global config port: %d\n", GlobalConfig.server_port);
 		start_server();
 	} else if (strcmp(argv[1], "client") == 0) {
 		printf("Launching client\n");
