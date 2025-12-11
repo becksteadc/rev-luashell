@@ -118,7 +118,8 @@ int server_handle_conn(SOCKET socket_fd)
 char server_loop(SOCKET host_conn, char *buf, size_t buflen)
 {
 	char command[1]; //hack...
-	
+	char ret_val = 0;
+
 	printf("%s\n", "Enter command to send: ");
 	scanf("%s", buf); 
 	buf[buflen - 1] = '\0';
@@ -127,21 +128,15 @@ char server_loop(SOCKET host_conn, char *buf, size_t buflen)
 		return 1;
 
 	int send_status = send(host_conn, command, sizeof(char), 0);
-	if (send_status == SOCKET_ERROR)
+	if (send_status == SOCKET_ERROR) {
 		printf("%s\n", "Failed to send command over socket.");
-	else {
-		/*for (int i = 0; i < buflen; i++) { //memset buffer to zero but end on \0 
-			if (buf[i] == '\0') break;
-			buf[i] = 0;
-		}
-		*/
-		//int response = recv(host_conn, buf, buflen - 1, 0);
-		/*if (response > 0) {
-			buf[buflen - 1] = '\0';
-			printf("Return response: %s\n", buf);
-		}*/
+		ret_val = 1;
 	}
-	return 0;
+	else {
+		ret_val = exec_command_server_side(host_conn, command[0], buf, buflen);
+		
+	}
+	return ret_val;
 }
 
 int start_host()
@@ -201,8 +196,7 @@ int start_host()
 	}
 
 	char buf[CLIENT_BUFLEN];	
-	//Possible bug - strlen not sending null terminator (do strlen+1)?
-	result = send(client_socket, "Testing send", strlen("Testing send"), 0);
+	result = send(client_socket, "Testing send", sizeof("Testing send"), 0);
 	if (result == SOCKET_ERROR) {
 		fprintf(stderr, "send failed, error: %d\n", WSAGetLastError());
 		closesocket(client_socket);
@@ -211,7 +205,7 @@ int start_host()
 	}
 	printf("%s\n", "Contact established, listening.");
 	result = 1;
-
+	//TODO - stop client from exiting after only a couple of commands
 	do {
 		result = recv(client_socket, buf, CLIENT_BUFLEN, 0);
 		if (result == SOCKET_ERROR) {
@@ -226,6 +220,7 @@ int start_host()
 		for (int i = 0; i < result; i++) {
 			printf("Result:\t%c\tHex: %#X\n", buf[i], buf[i]);
 		}
+		exec_command(buf[0], client_socket, buf, CLIENT_BUFLEN);//TODO temp, testing, remove, delete later, etc
 	} while(result > 0);
 
 	closesocket(client_socket);

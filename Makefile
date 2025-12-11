@@ -5,7 +5,7 @@ SRC_DIR=src/
 #Change this to match your OS - only these two options are available.
 #OS=OS_LINUX 
 OS=OS_WINDOWS
-CFLAGS=-Wall --define-macro $(OS)
+CFLAGS=-Wall --define-macro $(OS) -g
 
 # Define the lua location manually on windows. Linux, use your package manager
 LUA_DIR=./lua-5.4.8/install/lib

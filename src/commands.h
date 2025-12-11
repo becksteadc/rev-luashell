@@ -5,6 +5,14 @@
  * less restricted commands may be available in another module
  */
 
+ #ifdef OS_WINDOWS
+ #include <winsock2.h>
+ #endif
+
+ #ifdef OS_LINUX
+ typedef int SOCKET; //for portability
+ #endif
+
 extern const char *command_strings[];
 
 enum Commands {
@@ -23,8 +31,11 @@ struct Hashmap {
 
 /* Return is an error code, functionality is in the logic. */
 int parse_command(const char *cmd);
-int exec_command(enum Commands cmd);
+int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen);
+int exec_command_server_side(SOCKET conn, enum Commands cmd, char *buf, size_t buflen);
 struct Hashmap *create_hashmap();
 int parse_command_hashmap(const char *cmd);
+char xmit_file(FILE *fp, SOCKET conn, char *buf, size_t buflen);
+char recv_file(FILE *fp_out, SOCKET conn, char *buf, size_t buflen);
 
 #endif
