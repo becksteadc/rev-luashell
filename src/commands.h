@@ -5,9 +5,6 @@
  * less restricted commands may be available in another module
  */
 
-/* coupled with the parse_command function */
-#define CWB_COMMAND_LEN 5
-
 extern const char *command_strings[];
 
 enum Commands {

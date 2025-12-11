@@ -76,7 +76,7 @@ int server_handle_conn(SOCKET socket_fd)
 	//socklen_t c_addr_len = sizeof(c_addr);
 	char quit = 0; //bool flag for the do-while loop
 	//cfd -- client file descriptor
-	fprintf(stdout, "DEBUG: reached accept() call\n");
+	//fprintf(stdout, "DEBUG: reached accept() call\n");
 	SOCKET cfd = accept(socket_fd, NULL, NULL);
 	closesocket(socket_fd);
 
@@ -91,7 +91,7 @@ int server_handle_conn(SOCKET socket_fd)
 		return -1;
 	}	
 
-	fprintf(stderr, "DEBUG: reached recv()\n");
+	//fprintf(stderr, "DEBUG: reached recv()\n");
 	int result = recv(cfd, buf, sizeof(buf), 0);
 	if (result == SOCKET_ERROR) {
 		printf("send failed with error on recv(): %d", WSAGetLastError());
@@ -103,9 +103,9 @@ int server_handle_conn(SOCKET socket_fd)
 	printf("Contact received: %s\n", buf);
 	
 	do {
-		fprintf(stderr, "DEBUG: reached server_loop begin\n");
+		//fprintf(stderr, "DEBUG: reached server_loop begin\n");
 		quit = server_loop(cfd, buf, sizeof(buf));
-		fprintf(stderr, "DEBUG: reached server_loop exit\n");
+		//fprintf(stderr, "DEBUG: reached server_loop exit\n");
 	} while (!quit);
 
 	closesocket(cfd);
@@ -115,7 +115,7 @@ int server_handle_conn(SOCKET socket_fd)
 
 //contact is successfully made, so this handles each message.
 //return nonzero to quit the loop
-int server_loop(SOCKET host_conn, char *buf, size_t buflen)
+char server_loop(SOCKET host_conn, char *buf, size_t buflen)
 {
 	char command[1]; //hack...
 	
@@ -126,19 +126,20 @@ int server_loop(SOCKET host_conn, char *buf, size_t buflen)
 	if (command[0] == CMD_QUIT)
 		return 1;
 
-	int send_status = send(host_conn, command, sizeof(int), 0);
+	int send_status = send(host_conn, command, sizeof(char), 0);
 	if (send_status == SOCKET_ERROR)
 		printf("%s\n", "Failed to send command over socket.");
 	else {
-		for (int i = 0; i < buflen; i++) { //memset buffer to zero but better?
+		/*for (int i = 0; i < buflen; i++) { //memset buffer to zero but end on \0 
 			if (buf[i] == '\0') break;
 			buf[i] = 0;
 		}
-		int response = recv(host_conn, buf, buflen - 1, 0);
-		if (response > 0) {
+		*/
+		//int response = recv(host_conn, buf, buflen - 1, 0);
+		/*if (response > 0) {
 			buf[buflen - 1] = '\0';
 			printf("Return response: %s\n", buf);
-		}
+		}*/
 	}
 	return 0;
 }
@@ -200,7 +201,7 @@ int start_host()
 	}
 
 	char buf[CLIENT_BUFLEN];	
-	//Possible bug - strlen not sending null terminator (do strlen+1)
+	//Possible bug - strlen not sending null terminator (do strlen+1)?
 	result = send(client_socket, "Testing send", strlen("Testing send"), 0);
 	if (result == SOCKET_ERROR) {
 		fprintf(stderr, "send failed, error: %d\n", WSAGetLastError());
@@ -208,6 +209,8 @@ int start_host()
 		WSACleanup();
 		return -3;
 	}
+	printf("%s\n", "Contact established, listening.");
+	result = 1;
 
 	do {
 		result = recv(client_socket, buf, CLIENT_BUFLEN, 0);
@@ -217,8 +220,12 @@ int start_host()
 			WSACleanup();
 			return -4;
 		}
-		buf[result] = '\0';
-		printf("%s\n", buf);	
+		//buf[result] = '\0';
+		//printf("%s\n", buf);	
+		printf("Result len: %d\n", result);
+		for (int i = 0; i < result; i++) {
+			printf("Result:\t%c\tHex: %#X\n", buf[i], buf[i]);
+		}
 	} while(result > 0);
 
 	closesocket(client_socket);

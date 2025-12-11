@@ -17,7 +17,8 @@
 
 
 
-
+/* coupled with the parse_command function */
+#define CWB_COMMAND_LEN 5
 const char *command_strings[] = {
 	"quit",
 	"msg",

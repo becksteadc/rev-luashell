@@ -20,7 +20,7 @@
 
 int start_server(void);
 int server_handle_conn(SOCKET socket_fd);
-int server_loop(SOCKET host_conn, char *buf, size_t buflen);
+char server_loop(SOCKET host_conn, char *buf, size_t buflen);
 
 int start_host(void); //client code
 
