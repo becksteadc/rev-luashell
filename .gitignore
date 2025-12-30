@@ -55,3 +55,4 @@ dkms.conf
 *.dwo
 
 lshell-data-out.txt
+*.swp
