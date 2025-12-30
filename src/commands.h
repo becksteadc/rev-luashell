@@ -35,7 +35,7 @@ int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen);
 int exec_command_server_side(SOCKET conn, enum Commands cmd, char *buf, size_t buflen);
 struct Hashmap *create_hashmap();
 int parse_command_hashmap(const char *cmd);
-char xmit_file(FILE *fp, SOCKET conn, char *buf, size_t buflen);
-char recv_file(FILE *fp_out, SOCKET conn, char *buf, size_t buflen);
+char xmit_file(FILE *fp, SOCKET conn);
+char recv_file(FILE *fp_out, SOCKET conn);
 
 #endif

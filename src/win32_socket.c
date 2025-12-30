@@ -206,8 +206,14 @@ int start_host()
 	printf("%s\n", "Contact established, listening.");
 	result = 1;
 	//TODO - stop client from exiting after only a couple of commands
+	char quit_counter = 2;
 	do {
+		memset(buf, 0, CLIENT_BUFLEN);
 		result = recv(client_socket, buf, CLIENT_BUFLEN, 0);
+		if (result == 0)
+			quit_counter--;
+		else
+			quit_counter = 2;
 		if (result == SOCKET_ERROR) {
 			fprintf(stderr, "socket error %d\n", WSAGetLastError());
 			closesocket(client_socket);
@@ -221,7 +227,7 @@ int start_host()
 			printf("Result:\t%c\tHex: %#X\n", buf[i], buf[i]);
 		}
 		exec_command(buf[0], client_socket, buf, CLIENT_BUFLEN);//TODO temp, testing, remove, delete later, etc
-	} while(result > 0);
+	} while(quit_counter);
 
 	closesocket(client_socket);
 	WSACleanup();

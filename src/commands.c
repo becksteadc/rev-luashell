@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include "commands.h"
 
 
@@ -70,21 +71,36 @@ typedef int SOCKET;
 int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen) //TODO exec commands...
 {
 	int exec_status = -1;
+	char fname[64] = { 0 };
+	FILE *fp = NULL;
 	switch (cmd){
 		case CMD_MESSAGE:
 		break;
 		case CMD_SEND_DATA:
-		FILE *fp = fopen("lshell-data-out.txt", "w");
+		fp = fopen("lshell-data-out.txt", "w");
 		if (fp == NULL) {
-			fclose(fp);
+			//fclose(fp); // shouldn't close NULL file pointer...
 			goto error_jump;
 		}
-		while (recv_file(fp, conn, buf, buflen))
+		while (recv_file(fp, conn))
 			;
 		fclose(fp);
 		exec_status = 0;
 		break;
 		case CMD_REQ_DATA:
+		int bytes_received = recv(conn, fname, 64, 0);
+		if (bytes_received == 0) {
+			printf("Received 0 bytes for filename in req_data clientside.");
+			return 1;
+		}
+		fp = fopen(fname, "r");
+		if (fp == NULL) {
+			goto error_jump;
+		}
+		while (xmit_file(fp, conn) != 0)
+			;
+		fclose(fp);
+		exec_status = 0;
 		break;
 		case CMD_DEPOSIT_TXT:
 		break;
@@ -101,85 +117,109 @@ int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen) //TOD
 //return code is boolean: whether to continue looping calls to this
 //function or not.
 //does not close *fp or conn
-//two send calls - 1st is file data, 2nd is indicating whether
-//the receiver should loop and expect more data to come, or if
-//the end has been reached.
 //it's kind of essential that they use the same buflen, so maybe that
 //should be a constant rather than a passed-in value...
 #define XMIT_CONTINUE 0xFFFFFFFF
 #define XMIT_END 0xBBBBBBBB
-char xmit_file(FILE *fp, SOCKET conn, char *buf, size_t buflen)
+#define PACKET_FLAG_LEN 4
+#define XMIT_BUFFER_LEN 1024
+char xmit_file(FILE *fp, SOCKET conn)
 {
 	int ret_val = 0; //do not continue
-	int bytes_read = fread(buf, sizeof(char), buflen, fp);
-	if (bytes_read == buflen)
+	char buf[XMIT_BUFFER_LEN] = {0};
+	int bytes_read = fread(buf, sizeof(char), XMIT_BUFFER_LEN - PACKET_FLAG_LEN, fp);
+	if (bytes_read == XMIT_BUFFER_LEN - PACKET_FLAG_LEN)
 		ret_val = 1;
-	send(conn, buf, bytes_read, 0);
-	char magic_packet[4];
+
 	if (ret_val)
-		memset(magic_packet, 0xFF, 4);//XMIT_CONTINUE
+		memset(buf + bytes_read, 0xFF, 4);//XMIT_CONTINUE
 	else
-		memset(magic_packet, 0xBB, 4);//XMIT_END
-	send(conn, magic_packet, 4, 0); 
+		memset(buf + bytes_read, 0xBB, 4);//XMIT_END
+	send(conn, buf, bytes_read + PACKET_FLAG_LEN, 0);
 	return ret_val;
 }
 
-char recv_file(FILE *fp_out, SOCKET conn, char *buf, size_t buflen)
+char recv_file(FILE *fp_out, SOCKET conn)
 {
 	int ret_val = 0;
-	int bytes_received = recv(conn, buf, buflen, 0);
-	int written = fwrite(buf, sizeof(char), bytes_received, fp_out);
-	printf("DEBUG: bytes written in recv_file(): %d\nreceived: %d\n", written, bytes_received);
-	if (written != bytes_received) //uh-oh...
-		printf("%s\n", "File write error in recv_file()...");
-	bytes_received = recv(conn, buf, buflen, 0);
-	printf("DEBUG: bytes_received for magic: %d\n", bytes_received);
-	unsigned int magic_number = 0;
-	for (int i = 0; i < 4; i++) {
-		magic_number <<=8;
-		magic_number |= buf[i];
-		printf("DEBUG: buf[i]: %#x\n", buf[i]);
+	char buf[XMIT_BUFFER_LEN] = {0};
+	int bytes_received = recv(conn, buf, XMIT_BUFFER_LEN, 0);
+	uint32_t magic_number = 0;
+	for (int i = 0; i < PACKET_FLAG_LEN; ++i) {
+		magic_number <<= 8;
+		magic_number |= (unsigned char) buf[i + bytes_received - PACKET_FLAG_LEN];
 	}
-	printf("DEBUG: magic_number: %#x\n", magic_number);
+
 	if (magic_number == XMIT_CONTINUE)
 		ret_val = 1;
-	else
+	else if (magic_number == XMIT_END)
 		ret_val = 0;
+	else {
+		ret_val = 2;
+		printf("recv_file did not receive a proper packet flag. File integrity compromised.\n");
+	}
+
+	int written = fwrite(buf, sizeof(char), bytes_received - PACKET_FLAG_LEN, fp_out);
+	printf("DEBUG: bytes written in recv_file(): %d\nreceived: %d\n", written, bytes_received);
+	//expect this to be PACKET_FLAG_LEN less than the received value
+	fflush(stdout);
+	if (written != bytes_received - PACKET_FLAG_LEN) //uh-oh...
+		printf("%s\n", "File write error in recv_file()...");
 
 	return ret_val;
 }
 //guarantee these are not used elsewhere for mental clarity
 #undef XMIT_CONTINUE
 #undef XMIT_END
+#undef PACKET_FLAG_LEN
+#undef XMIT_BUFFER_LEN
 
 int exec_command_server_side(SOCKET conn, enum Commands cmd, char *buf, size_t buflen)
 {
 	int exec_status = -1;
+	char fname[64] = { 0 };
+	FILE *fp = NULL;
 	switch (cmd) {
 		case CMD_MESSAGE:
 		break;
 		case CMD_SEND_DATA:
 		printf("Filename to send:\n");
-		char fname[64] = { 0 };
 		scanf_s("%s", &fname, 64);
-		FILE *fp = fopen(fname, "r");
+		fp = fopen(fname, "r");
 		if (fp == NULL) {
 			fclose(fp);
 			exec_status = 1;
 			break;
 		}
 		//fread(buf, sizeof(char), buflen, fp);
-		while (xmit_file(fp, conn, buf, buflen) != 0)
+		while (xmit_file(fp, conn) != 0)
 			;//good spot to check for infinite loops if that problem comes up
 		fclose(fp);
 		exec_status = 0;
 		break;
 		case CMD_REQ_DATA:
+		printf("Filename to request:\n");
+		scanf_s("%s", &fname, 64);
+		send(conn, fname, 64, 0);
+		printf("Filename to (over)write:\n");
+		scanf_s("%s", &fname, 64);
+		fp = fopen(fname, "w");
+		if (fp == NULL) {
+			fclose(fp);
+			exec_status = 1;
+			break;
+		}
+		while (recv_file(fp, conn) != 0)
+			;
+		fclose(fp);
+		exec_status = 0;
 		break;
 		case CMD_DEPOSIT_TXT:
 		break;
 		default:
+		printf("Not recognized as an internal or external command, operable program, or batch file.");
 		return -1;
 	}
+	if (exec_status == -1) exec_status = 0; //TODO debug - prevent server from always closing conn
 	return exec_status; //set to return value of command execution in switch block
 }
