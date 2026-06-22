@@ -75,6 +75,7 @@ int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen) //TOD
 	FILE *fp = NULL;
 	switch (cmd){
 		case CMD_MESSAGE:
+		printf("DEBUG: received cmd_message\n");
 		break;
 		case CMD_SEND_DATA:
 		fp = fopen("lshell-data-out.txt", "w");
@@ -103,6 +104,7 @@ int exec_command(enum Commands cmd, SOCKET conn, char *buf, size_t buflen) //TOD
 		exec_status = 0;
 		break;
 		case CMD_DEPOSIT_TXT:
+		printf("DEBUG: received cmd_deposit_txt\n");
 		break;
 		default:
 		return -1;
@@ -174,6 +176,7 @@ char recv_file(FILE *fp_out, SOCKET conn)
 #undef PACKET_FLAG_LEN
 #undef XMIT_BUFFER_LEN
 
+//eww.
 int exec_command_server_side(SOCKET conn, enum Commands cmd, char *buf, size_t buflen)
 {
 	int exec_status = -1;
